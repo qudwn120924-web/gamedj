@@ -230,16 +230,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// ★★★★★ 여기를 "대전 전용" Firebase 설정으로 바꿔주세요 ★★★★★
-// (index.html과 똑같은 값을 넣어야 둘이 연동됩니다!)
+// 대전 전용 Firebase 설정 (gamedj-fc5bb)
 const app = initializeApp({
-  apiKey:"여기에_대전_apiKey",
-  authDomain:"여기에_대전_authDomain",
-  databaseURL:"여기에_대전_databaseURL",
-  projectId:"여기에_대전_projectId",
-  storageBucket:"여기에_대전_storageBucket",
-  messagingSenderId:"여기에_대전_messagingSenderId",
-  appId:"여기에_대전_appId"
+  apiKey:"AIzaSyCNka_qaN6oquoe1Q2uTBptyC5IEBj0fE8",
+  authDomain:"gamedj-fc5bb.firebaseapp.com",
+  databaseURL:"https://gamedj-fc5bb-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"gamedj-fc5bb",
+  storageBucket:"gamedj-fc5bb.firebasestorage.app",
+  messagingSenderId:"523448448361",
+  appId:"1:523448448361:web:22e75b3e75daa7a65a39f8"
 });
 const db = getDatabase(app);
 const cfgRef    = ref(db, 'config');
