@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>게임대전 관리자</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F7FA;--bg2:#fff;--border:#DDE3ED;
+  --text:#1A2340;--text2:#5A6785;--text3:#8A97B0;
+  --accent:#2563EB;--green:#16A34A;--red:#DC2626;--gold:#D97706;--purple:#7C3AED;
+}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* 로그인 */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:360px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.login-logo{font-size:22px;font-weight:900;margin-bottom:8px;color:var(--text)}.login-logo span{color:var(--accent)}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:28px}
+.login-inp{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--bg);margin-bottom:12px}
+.login-inp:focus{outline:none;border-color:var(--accent)}
+.login-btn{width:100%;padding:12px;border-radius:8px;background:var(--accent);color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer}
+.login-btn:hover{background:#1D4ED8}
+.login-err{font-size:12px;color:var(--red);margin-top:8px}
+
+/* 헤더 */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.hdr-in{display:flex;align-items:center;justify-content:space-between;max-width:1000px;margin:0 auto}
+.logo{font-size:17px;font-weight:900;color:var(--text)}.logo span{color:var(--red)}
+.hdr-r{display:flex;gap:10px;align-items:center}
+.sdot{width:7px;height:7px;border-radius:50%;background:#ccc;display:inline-block;margin-right:4px}
+.sdot.live{background:var(--green)}
+.slbl{font-size:11px;color:var(--text3)}
+.btn{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:700;border:none;cursor:pointer;transition:all .15s}
+.btn-red{background:#FEE2E2;color:var(--red)}.btn-red:hover{background:#FECACA}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#1D4ED8}
+.btn-green{background:#DCFCE7;color:var(--green)}.btn-green:hover{background:#BBF7D0}
+.btn-outline{background:var(--bg2);color:var(--text2);border:1px solid var(--border)}.btn-outline:hover{background:var(--bg)}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* 메인 */
+.main{max-width:1000px;margin:0 auto;padding:24px}
+.stitle{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:7px;color:var(--text)}
+.stitle::before{content:'';display:inline-block;width:3px;height:15px;background:var(--accent);border-radius:2px}
+.section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+
+/* 기본 설정 */
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cfg-item label{font-size:12px;font-weight:700;color:var(--text3);display:block;margin-bottom:5px}
+.cfg-inp{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--bg)}
+.cfg-inp:focus{outline:none;border-color:var(--accent)}
+
+/* 주차 설정 */
+.week-row{display:grid;grid-template-columns:80px 1fr 1fr 1fr 36px;gap:8px;align-items:center;margin-bottom:8px}
+.week-lbl{font-size:12px;font-weight:700;color:var(--text2)}
+
+/* 팀 카드 */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.team-card{border:1.5px solid var(--border);border-radius:10px;overflow:hidden}
+.team-card-hdr{padding:10px 13px;display:flex;align-items:center;justify-content:space-between}
+.team-card-hdr input{background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.4);border-radius:5px;color:#fff;font-size:13px;font-weight:700;padding:3px 7px;width:80px;font-family:'Noto Sans KR',sans-serif}
+.team-card-hdr input:focus{outline:none;background:rgba(255,255,255,.4)}
+.team-card-body{padding:12px}
+.member-row{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.member-inp{flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--bg)}
+.member-inp:focus{outline:none;border-color:var(--accent)}
+.color-pick{width:32px;height:32px;border-radius:6px;border:none;cursor:pointer;padding:2px}
+
+/* 저장 버튼 */
+.save-bar{position:sticky;bottom:0;background:var(--bg2);border-top:1px solid var(--border);padding:14px 24px;text-align:center}
+.save-bar-in{max-width:1000px;margin:0 auto;display:flex;gap:12px;justify-content:center}
+
+.badge-saved{display:inline-block;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;background:#DCFCE7;color:var(--green);opacity:0;transition:opacity .3s}
+.badge-saved.show{opacity:1}
+
+/* 알림 */
+.alert{padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:14px;font-weight:500}
+.alert-blue{background:var(--accent-light,#EFF4FF);color:var(--accent);border:1px solid #BFCFFF}
+</style>
+</head>
+<body>
+
+<!-- 로그인 화면 -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">게임대전 <span>관리자</span></div>
+    <div class="login-sub">관리자 비밀번호를 입력하세요</div>
+    <input class="login-inp" type="password" id="pw-inp" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">로그인</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- 관리자 화면 -->
+<div id="admin-wrap" style="display:none">
+  <div class="hdr">
+    <div class="hdr-in">
+      <div class="logo">게임대전 <span>관리자</span></div>
+      <div class="hdr-r">
+        <span><span class="sdot" id="sd"></span><span class="slbl" id="sl">연결 중...</span></span>
+        <a href="index.html"><button class="btn btn-outline">← 현황판으로</button></a>
+        <button class="btn btn-red" onclick="doLogout()">로그아웃</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="alert alert-blue">⚠ 저장 버튼을 눌러야 현황판에 반영됩니다. 팀/직원 변경 시 기존 입력 데이터는 유지됩니다.</div>
+
+    <!-- 기본 설정 -->
+    <!-- 결산 마감 -->
+    <div class="stitle">📊 결산 마감 & 아카이브</div>
+    <div class="section">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end">
+        <div class="cfg-item">
+          <label>마감할 월 (YYYY-MM)</label>
+          <input class="cfg-inp" id="sales-archive-month" type="month" value="2026-06">
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="doSalesArchive()" style="padding:9px 20px;white-space:nowrap">
+            💾 결산 마감 저장
+          </button>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--text3);line-height:1.8">
+        ✅ 저장 항목: 주차별 결산 실적 / 설정<br>
+        ⚠ 마감 후 새 달 설정으로 업데이트하세요.
+      </div>
+      <div id="sales-archive-list" style="margin-top:14px"></div>
+    </div>
+
+    <!-- 영업일 일정 관리 -->
+    <div class="stitle">📅 영업일 일정 관리</div>
+    <div class="section">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.8;background:#F0FDF4;padding:10px 14px;border-radius:8px;border:1px solid #BBF7D0">
+        💡 과거·현재·미래 영업일을 모두 등록해두면 현황판에서 <b>탭으로 이동하며 열람</b>할 수 있어요.<br>
+        ✅ 오늘 날짜에 해당하는 영업월이 <b>[현재]</b>로 자동 표시되고, ◀▶ 버튼으로 다른 영업월로 이동해요.<br>
+        📌 <b>다음 영업일도 미리 추가</b>해두면 다음 달이 시작될 때 자동으로 [현재]로 전환돼요.
+      </div>
+      <div id="biz-schedule-status" style="margin-bottom:10px"></div>
+      <div id="biz-schedule-list"></div>
+      <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="addBizSchedule()">+ 영업일 추가 (과거/미래 모두 가능)</button>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveBizSchedule()">💾 영업일 일정 저장</button>
+    </div>
+
+    <!-- 영업일 마감 -->
+    <div class="stitle">💼 영업일 마감 & 아카이브</div>
+    <div class="section">
+      <div style="background:#FFFDE7;border:1px solid #FCD34D;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;display:flex;align-items:center;gap:12px">
+        <span>⚡ 현재 영업일이 잘못 저장된 경우:</span>
+        <button class="btn btn-outline btn-sm" onclick="
+          document.getElementById('cfg-bizStart').value='2026-05-01';
+          document.getElementById('cfg-bizEnd').value='2026-05-31';
+          alert('기본 설정 영업일을 5월로 변경했어요.\n아래 저장 & 현황판 반영 버튼을 눌러주세요!');
+        ">5월 영업일로 복구</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end">
+        <div class="cfg-item">
+          <label>영업일 시작</label>
+          <input class="cfg-inp" id="biz-archive-start" type="date" value="2026-05-01">
+        </div>
+        <div class="cfg-item">
+          <label>영업일 종료</label>
+          <input class="cfg-inp" id="biz-archive-end" type="date" value="2026-05-31">
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="doBizArchive()" style="padding:9px 20px;white-space:nowrap">
+            💾 마감 & 아카이브 저장
+          </button>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--text3);line-height:1.8;background:#F8FAFF;padding:10px 14px;border-radius:8px;border:1px solid #BFCFFF">
+        💡 <b>마감할 영업일 기간</b>을 입력하고 저장하면 해당 기간의 영업현황·상담내역·미납리스트가 아카이브에 백업돼요.<br>
+        ℹ️ 현재 진행 중인 영업일은 <b>기본 설정</b>에서 따로 관리해요. 두 칸은 독립적이에요.
+      </div>
+      <div id="biz-archive-list" style="margin-top:14px"></div>
+    </div>
+
+    <div class="stitle">기본 설정</div>
+    <div class="section">
+      <div class="cfg-grid">
+        <div class="cfg-item">
+          <label>월 목표 매출 (원)</label>
+          <input class="cfg-inp" id="cfg-totalGoal" type="text" inputmode="numeric" placeholder="431000000">
+        </div>
+        <div class="cfg-item">
+          <label>월 이름</label>
+          <input class="cfg-inp" id="cfg-monthLabel" type="text" placeholder="6월">
+        </div>
+        <div class="cfg-item">
+          <label>영업일 시작</label>
+          <input class="cfg-inp" id="cfg-bizStart" type="date">
+        </div>
+        <div class="cfg-item">
+          <label>영업일 종료</label>
+          <input class="cfg-inp" id="cfg-bizEnd" type="date">
+        </div>
+      </div>
+    </div>
+
+    <!-- 주차 설정 -->
+    <div class="stitle">주차별 목표 설정</div>
+    <div class="section">
+      <div style="font-size:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 14px;margin-bottom:12px;color:var(--text2)">
+        영업일 기간 안에서 주차별 시작일/종료일을 지정하세요. 대시보드 주차별 매출계획에 즉시 반영됩니다.
+      </div>
+      <div id="weeks-container"></div>
+      <button class="btn btn-outline" style="margin-top:8px;width:100%" onclick="addWeek()">+ 주차 추가</button>
+    </div>
+
+    <!-- 팀 설정 -->
+    <div class="stitle">팀 & 직원 설정</div>
+    <div class="section">
+      <div class="team-grid" id="teams-container"></div>
+      <button class="btn btn-outline" style="margin-top:12px;width:100%" onclick="addTeam()">+ 팀 추가</button>
+    </div>
+  </div>
+
+  <div class="save-bar">
+    <div class="save-bar-in">
+      <button class="btn btn-primary" style="padding:10px 32px;font-size:14px" onclick="saveAll()">💾 저장 & 현황판 반영</button>
+      <span class="badge-saved" id="saved-badge">✅ 저장됨!</span>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ★★★★★ 여기를 "대전 전용" Firebase 설정으로 바꿔주세요 ★★★★★
+// (index.html과 똑같은 값을 넣어야 둘이 연동됩니다!)
+const app = initializeApp({
+  apiKey:"여기에_대전_apiKey",
+  authDomain:"여기에_대전_authDomain",
+  databaseURL:"여기에_대전_databaseURL",
+  projectId:"여기에_대전_projectId",
+  storageBucket:"여기에_대전_storageBucket",
+  messagingSenderId:"여기에_대전_messagingSenderId",
+  appId:"여기에_대전_appId"
+});
+const db = getDatabase(app);
+const cfgRef    = ref(db, 'config');
+const salesRef  = ref(db, 'sales2025');
+const bizRef    = ref(db, 'biz2025');
+const consultRef= ref(db, 'consult2025');
+const archiveRef= ref(db, 'archive');
+
+// ── 기본 설정값 ─────────────────────────────────────
+const DEFAULT_CFG = {
+  bizStart: '2026-05-01',
+  bizEnd: '2026-05-31',
+  totalGoal: 431000000,
+  monthLabel: '6월',
+  bizStart: '2026-05-14',
+  bizEnd: '2026-06-11',
+  weeks: [
+    {label:'1주차', period:'6/1~6/8',   total:110000000},
+    {label:'2주차', period:'6/9~6/14',  total:111000000},
+    {label:'3주차', period:'6/15~6/20', total: 60000000},
+    {label:'4주차', period:'6/21~6/30', total:150000000},
+  ],
+  teams: [
+    {name:'1팀', color:'#2563EB', members:['직원1','직원2','직원3']},
+    {name:'2팀', color:'#16A34A', members:['직원4','직원5','직원6']},
+    {name:'3팀', color:'#7C3AED', members:['직원7','직원8','직원9']},
+  ]
+};
+
+const ADMIN_PW = 'rpdlaeowjs'; // ← 비밀번호 변경 가능
+let CFG = JSON.parse(JSON.stringify(DEFAULT_CFG));
+let SALES_DATA = {};
+let BIZ_DATA = {};
+let CONSULT_DATA = {};
+const F = n => Math.round(n||0).toLocaleString('ko-KR');
+const N = v => parseInt((v+'').replace(/[^0-9]/g,''))||0;
+
+// ── 로그인 ───────────────────────────────────────────
+window.doLogin = () => {
+  const pw = document.getElementById('pw-inp').value;
+  if (pw === ADMIN_PW) {
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('admin-wrap').style.display = '';
+    initFirebase();
+  } else {
+    document.getElementById('login-err').textContent = '비밀번호가 틀렸어요!';
+  }
+};
+window.doLogout = () => {
+  document.getElementById('admin-wrap').style.display = 'none';
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('pw-inp').value = '';
+};
+
+// ── Firebase ─────────────────────────────────────────
+function initFirebase() {
+  onValue(salesRef,   snap => { SALES_DATA   = snap.val() || {}; });
+  onValue(bizRef,     snap => { BIZ_DATA    = snap.val() || {}; });
+  onValue(consultRef, snap => { CONSULT_DATA= snap.val() || {}; });
+  onValue(cfgRef, snap => {
+    const v = snap.val();
+    if (v) CFG = v;
+    else CFG = JSON.parse(JSON.stringify(DEFAULT_CFG));
+    document.getElementById('sd').className = 'sdot live';
+    document.getElementById('sl').textContent = '연결됨';
+    renderAll();
+    loadSalesArchiveList();
+    loadBizArchiveList();
+  });
+}
+
+// ── 렌더 ─────────────────────────────────────────────
+function renderAll() {
+  // 기본 설정
+  document.getElementById('cfg-totalGoal').value = CFG.totalGoal ? F(CFG.totalGoal) : '';
+  document.getElementById('cfg-monthLabel').value = CFG.monthLabel || '';
+  document.getElementById('cfg-bizStart').value = CFG.bizStart || '';
+  document.getElementById('cfg-bizEnd').value = CFG.bizEnd || '';
+  renderWeeks();
+  renderTeams();
+  // 영업일 일정
+  // 로드 시 _id 없는 항목에 고유 ID 부여
+  BIZ_SCHEDULE = (Array.isArray(CFG.bizSchedule) ? CFG.bizSchedule : []).map(s => s._id ? s : {...s, _id: Date.now() + Math.random()});
+  renderBizSchedule();
+}
+
+function renderWeeks() {
+  const con = document.getElementById('weeks-container');
+  con.innerHTML = (CFG.weeks||[]).map((w,i) => `
+    <div style="margin-bottom:10px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <div style="display:grid;grid-template-columns:70px 1fr 1fr 1fr auto;gap:6px;align-items:center;padding:10px 12px;background:var(--bg)">
+        <input class="cfg-inp" value="${w.label||''}" placeholder="1주차"
+          oninput="updWeek(${i},'label',this.value)" style="font-weight:700;text-align:center">
+        <div class="cfg-item" style="margin:0">
+          <label style="font-size:10px">시작일</label>
+          <input class="cfg-inp" type="date" value="${w.startDate||''}"
+            onchange="updWeek(${i},'startDate',this.value);autoSetPeriod(${i})">
+        </div>
+        <div class="cfg-item" style="margin:0">
+          <label style="font-size:10px">종료일</label>
+          <input class="cfg-inp" type="date" value="${w.endDate||''}"
+            onchange="updWeek(${i},'endDate',this.value);autoSetPeriod(${i})">
+        </div>
+        <div class="cfg-item" style="margin:0">
+          <label style="font-size:10px">전체 목표 (합산)</label>
+          <input class="cfg-inp" id="week-total-inp-${i}" value="${w.total?F(w.total):''}" placeholder="자동합산"
+            oninput="updWeek(${i},'total',this.value)"
+            style="font-family:'Roboto Mono',monospace">
+        </div>
+        <button class="btn btn-red btn-sm" onclick="delWeek(${i})">✕</button>
+      </div>
+      <div style="padding:8px 12px;background:#F8FAFC;border-top:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px">팀별 목표 (비워두면 전체 목표에서 인원 비례 자동 배분)</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px">
+          ${(CFG.teams||[]).map(t => `
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:${t.color};white-space:nowrap;min-width:36px">${t.name}</span>
+              <input class="cfg-inp" value="${(w.teamGoals||{})[t.name]?F((w.teamGoals||{})[t.name]):''}"
+                placeholder="자동"
+                oninput="updWeekTeamGoal(${i},'${t.name}',this.value)"
+                onblur="syncWeekTotal(${i})"
+                style="flex:1;font-family:'Roboto Mono',monospace;font-size:11px">
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderTeams() {
+  const con = document.getElementById('teams-container');
+  con.innerHTML = (CFG.teams||[]).map((t,ti) => `
+    <div class="team-card">
+      <div class="team-card-hdr" style="background:${t.color}">
+        <input value="${t.name}" placeholder="팀 이름"
+          oninput="updTeam(${ti},'name',this.value)">
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="color" class="color-pick" value="${t.color}"
+            oninput="updTeamColor(${ti},this.value)">
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3)"
+            onclick="delTeam(${ti})">✕</button>
+        </div>
+      </div>
+      <div class="team-card-body">
+        <div id="members-${ti}">
+          ${(t.members||[]).map((m,mi) => `
+          <div class="member-row" style="gap:4px">
+            <input class="member-inp" value="${m}" placeholder="직원 이름"
+              oninput="updMember(${ti},${mi},this.value)" style="flex:2;min-width:80px">
+            <input class="member-inp" value="${(CFG.memberRoles||{})[m]||''}" placeholder="직급(예:팀장)"
+              oninput="updMemberRole('${m}',this.value)"
+              style="flex:1;min-width:52px;font-size:11px;color:var(--text2)">
+            <button class="btn btn-red btn-sm" onclick="delMember(${ti},${mi})">✕</button>
+          </div>`).join('')}
+        </div>
+        <button class="btn btn-outline btn-sm" style="width:100%;margin-top:4px"
+          onclick="addMember(${ti})">+ 직원 추가</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── 수정 함수들 ──────────────────────────────────────
+window.updWeek = (i,field,val) => {
+  if (!CFG.weeks[i]) return;
+  CFG.weeks[i][field] = field==='total' ? N(val) : val;
+};
+window.updWeekTeamGoal = (i, teamName, val) => {
+  if (!CFG.weeks[i]) return;
+  if (!CFG.weeks[i].teamGoals) CFG.weeks[i].teamGoals = {};
+  if (val.trim()) CFG.weeks[i].teamGoals[teamName] = N(val);
+  else delete CFG.weeks[i].teamGoals[teamName];
+};
+// 팀별 목표 입력 포커스 잃을 때 합산 → 전체 목표 표시 업데이트
+window.syncWeekTotal = (i) => {
+  if (!CFG.weeks[i]) return;
+  const goals = CFG.weeks[i].teamGoals || {};
+  const sum = Object.values(goals).reduce((s,v)=>s+N(v),0);
+  if (sum > 0) {
+    CFG.weeks[i].total = sum;
+    // 전체 목표 입력란만 업데이트 (DOM 재렌더 없이)
+    const inp = document.getElementById('week-total-inp-' + i);
+    if (inp) inp.value = sum.toLocaleString('ko-KR');
+  }
+};
+window.autoSetPeriod = (i) => {
+  const w = CFG.weeks[i]; if (!w) return;
+  if (w.startDate && w.endDate) {
+    const s = w.startDate.slice(5).replace('-','/').replace(/^0/,'');
+    const e = w.endDate.slice(5).replace('-','/').replace(/^0/,'');
+    w.period = s + '~' + e;
+  }
+  renderWeeks();
+};
+window.delWeek = i => { CFG.weeks.splice(i,1); renderWeeks(); };
+window.addWeek = () => {
+  CFG.weeks.push({label:`${CFG.weeks.length+1}주차`, period:'', startDate:'', endDate:'', total:0});
+  renderWeeks();
+};
+
+window.updTeam = (ti,field,val) => { if(CFG.teams[ti]) CFG.teams[ti][field]=val; };
+window.updTeamColor = (ti,val) => {
+  if(!CFG.teams[ti]) return;
+  CFG.teams[ti].color=val;
+  // 카드 헤더 배경색 즉시 반영
+  const cards = document.querySelectorAll('.team-card');
+  if(cards[ti]) cards[ti].querySelector('.team-card-hdr').style.background=val;
+};
+window.delTeam = ti => { CFG.teams.splice(ti,1); renderTeams(); };
+window.addTeam = () => {
+  const colors = ['#2563EB','#16A34A','#7C3AED','#EA580C','#0891B2','#DB2777'];
+  CFG.teams.push({name:`${CFG.teams.length+1}팀`, color:colors[CFG.teams.length%colors.length], members:[]});
+  renderTeams();
+};
+
+window.updMember = (ti,mi,val) => { if(CFG.teams[ti]?.members) CFG.teams[ti].members[mi]=val; };
+window.updMemberRole = (name, val) => {
+  if (!name || !name.trim()) return; // 빈 이름 키 방지
+  if (!CFG.memberRoles) CFG.memberRoles = {};
+  if (val.trim()) CFG.memberRoles[name] = val.trim();
+  else delete CFG.memberRoles[name];
+};
+window.delMember = (ti,mi) => { CFG.teams[ti].members.splice(mi,1); renderTeams(); };
+window.addMember = ti => { CFG.teams[ti].members.push(''); renderTeams(); };
+
+// ── 저장 ─────────────────────────────────────────────
+window.doArchive = async () => {
+  const month = document.getElementById('archive-month').value;
+  if (!month) { alert('마감할 월을 선택해주세요'); return; }
+  if (!confirm(`${month} 데이터를 아카이브에 저장할까요?
+
+현재 sales2025 데이터가 archive/${month}에 저장됩니다.`)) return;
+
+  try {
+    // 현재 config + sales 데이터를 아카이브에 저장
+    const { ref: dbRef, set: dbSet } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+    const arcMonthRef = dbRef(db, `archive/${month}`);
+    await dbSet(arcMonthRef, {
+      config: CFG,
+      sales: SALES_DATA,
+      archivedAt: new Date().toISOString()
+    });
+    alert(`✅ ${month} 데이터가 아카이브에 저장됐어요!
+
+현황판 사이드바 "월별 아카이브"에서 확인하세요.`);
+    loadSalesArchiveList();
+    loadBizArchiveList();
+  } catch(e) {
+    alert('저장 실패: ' + e.message);
+  }
+};
+
+async function loadSalesArchiveList() {
+  const { ref: dbRef, get } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+  const snap = await get(dbRef(db, 'archive/sales'));
+  const data = snap.val() || {};
+  const keys = Object.keys(data).sort().reverse();
+  const el = document.getElementById('sales-archive-list');
+  if (!keys.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">저장된 결산 아카이브</div>' +
+    keys.map(k => {
+      const d = data[k];
+      const label = d.label || k.replace(/_/g,'-');
+      const at = d.archivedAt ? new Date(d.archivedAt).toLocaleString('ko-KR') : '';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;margin-bottom:6px;font-size:12px">
+        <div><div style="font-weight:700">📊 ${label}</div><div style="color:var(--text3);margin-top:2px">${at}</div></div>
+        <button class="btn btn-red btn-sm" onclick="delSalesArchive('${k}')">삭제</button>
+      </div>`;
+    }).join('');
+}
+
+window.doBizArchive = async () => {
+  const s = document.getElementById('biz-archive-start').value;
+  const e = document.getElementById('biz-archive-end').value;
+  if (!s || !e) { alert('영업일 시작/종료를 모두 입력해주세요'); return; }
+
+  const label = s.slice(0,7); // YYYY-MM
+  const key = s.slice(0,7).replace('-','_'); // YYYY_MM
+
+  if (!confirm(`${s} ~ ${e} 영업 데이터를 아카이브에 저장할까요?\n\n저장 항목:\n• 영업현황 (BIZ)\n• 상담내역 (CONSULT)\n• 미납리스트\n• 영업일 기간`)) return;
+
+  try {
+    const { ref: dbRef, get, set: dbSet } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+
+    // 현재 데이터 수집 (영업현황 + 상담내역만, 주차별 실적 제외)
+    const [bizSnap, consultSnap] = await Promise.all([
+      get(dbRef(db, 'biz2025')),
+      get(dbRef(db, 'consult2025')),
+    ]);
+
+    // 기간 내 상담내역 + 미납리스트만 필터링
+    const allConsult = consultSnap.val() || {};
+    const filteredConsult = {};
+    Object.entries(allConsult).forEach(([date, rows]) => {
+      if (date >= s && date <= e) filteredConsult[date] = rows;
+    });
+
+    const archiveData = {
+      label: `${s} ~ ${e}`,
+      period: { s, e },
+      biz:     bizSnap.val() || {},
+      consult: filteredConsult,
+      config:  { teams: CFG.teams || [], tmCfg: CFG.tmCfg || [] },
+      archivedAt: new Date().toISOString(),
+    };
+
+    // archive/biz/YYYY_MM 에 저장
+    await dbSet(dbRef(db, `archive/biz/${key}`), archiveData);
+
+    alert(`✅ 아카이브 저장 완료!\n\n${label} 영업 데이터가 저장됐어요.\n현황판 사이드바 아카이브에서 확인하세요.`);
+    loadBizArchiveList();
+  } catch(err) {
+    alert('저장 실패: ' + err.message);
+  }
+};
+
+// ── 영업일 일정 관리 ──────────────────────────────────
+let BIZ_SCHEDULE = []; // [{label:'5월', start:'2026-05-14', end:'2026-06-11'}, ...]
+
+function renderBizSchedule() {
+  const el = document.getElementById('biz-schedule-list');
+  if (!el) return;
+  const today = new Date().toISOString().slice(0,10);
+
+  // 상태 요약
+  const statusEl = document.getElementById('biz-schedule-status');
+  if (statusEl) {
+    if (BIZ_SCHEDULE.length) {
+      const valid = BIZ_SCHEDULE.filter(s=>s.start&&s.end);
+      const hasCur = valid.some(s => today >= s.start && today <= s.end);
+      const futureCount = valid.filter(s => s.start > today).length;
+      const pastCount = valid.filter(s => s.end < today).length;
+      statusEl.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;font-size:11px;font-weight:700;margin-bottom:4px">
+        <span style="padding:3px 10px;border-radius:20px;background:#F1F5F9;color:#64748B">전체 ${BIZ_SCHEDULE.length}개</span>
+        ${pastCount?`<span style="padding:3px 10px;border-radius:20px;background:#F1F5F9;color:#64748B">과거 ${pastCount}개</span>`:''}
+        ${hasCur?`<span style="padding:3px 10px;border-radius:20px;background:#DBEAFE;color:#2563EB">현재 진행중</span>`:'<span style="padding:3px 10px;border-radius:20px;background:#FEF9C3;color:#92400E">현재 해당 없음</span>'}
+        ${futureCount?`<span style="padding:3px 10px;border-radius:20px;background:#DCFCE7;color:#166534">예정 ${futureCount}개</span>`:'<span style="padding:3px 10px;border-radius:20px;background:#FEE2E2;color:#DC2626">다음 영업일 미등록</span>'}
+      </div>`;
+    } else { statusEl.innerHTML = ''; }
+  }
+
+  if (!BIZ_SCHEDULE.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px;text-align:center">등록된 영업일 일정이 없어요</div>';
+    return;
+  }
+
+  // 날짜 기준 최신순 정렬 표시 — 인덱스는 data-idx 속성으로 DOM에 저장
+  const sorted = BIZ_SCHEDULE.map((s,i)=>({...s,i})).sort((a,b)=>b.start.localeCompare(a.start));
+
+  el.innerHTML = sorted.map((s) => {
+    const id = s._id;
+    const isCur = s.start && s.end && today >= s.start && today <= s.end;
+    const isPast = s.end && s.end < today;
+    const isFuture = s.start && s.start > today;
+    let statusTxt = '', rowBg = 'var(--bg)', rowBorder = 'var(--border)';
+    if (isCur)         { statusTxt = '<span style="padding:2px 8px;background:#2563EB;color:#fff;border-radius:6px;font-size:10px;font-weight:700">현재</span>'; rowBg='#EFF4FF'; rowBorder='#2563EB'; }
+    else if (isFuture) { statusTxt = '<span style="padding:2px 8px;background:#DCFCE7;color:#166534;border-radius:6px;font-size:10px;font-weight:700">예정</span>'; rowBg='#F0FDF4'; rowBorder='#86EFAC'; }
+    else if (isPast)   { statusTxt = '<span style="padding:2px 8px;background:#F1F5F9;color:#64748B;border-radius:6px;font-size:10px;font-weight:700">과거</span>'; }
+    const hasCustomTeam = s.teams && s.teams.length > 0;
+    const teamBadge = hasCustomTeam
+      ? `<span style="font-size:10px;background:#DCFCE7;color:#166534;padding:1px 7px;border-radius:10px;font-weight:700">${s.teams.length}팀 지정됨</span>`
+      : `<span style="font-size:10px;color:var(--text3)">기본 팀 구성</span>`;
+    return `<div style="margin-bottom:8px;border:1px solid ${rowBorder};border-radius:8px;overflow:hidden">
+      <div style="display:grid;grid-template-columns:110px 1fr 1fr auto;gap:8px;align-items:center;padding:10px;background:${rowBg}">
+        <div style="text-align:center">
+          ${statusTxt}
+          <input style="width:100px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-weight:700;text-align:center;font-family:inherit;margin-top:4px" value="${s.label||''}" placeholder="이름(예:7월)"
+            onchange="updBizSch(${id},'label',this.value)">
+        </div>
+        <div class="cfg-item" style="margin:0">
+          <label style="font-size:10px">시작일</label>
+          <input class="cfg-inp" type="date" value="${s.start||''}"
+            onchange="updBizSch(${id},'start',this.value)">
+        </div>
+        <div class="cfg-item" style="margin:0">
+          <label style="font-size:10px">종료일</label>
+          <input class="cfg-inp" type="date" value="${s.end||''}"
+            onchange="updBizSch(${id},'end',this.value)">
+        </div>
+        <button class="btn btn-red btn-sm" onclick="delBizSch(${id})">삭제</button>
+      </div>
+      <div style="padding:8px 12px;background:#F8FAFC;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;color:var(--text2);font-weight:600">팀 구성:</span>
+        ${teamBadge}
+        <button class="btn btn-outline btn-sm" onclick="openBizSchTeam(${id})" style="margin-left:4px">
+          ${hasCustomTeam ? '팀 구성 수정' : '팀 구성 지정'}
+        </button>
+        ${hasCustomTeam ? `<button class="btn btn-sm" style="background:#FEE2E2;color:#DC2626" onclick="updBizSch(${id},'teams',null);renderBizSchedule()">초기화</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.addBizSchedule = () => {
+  // 고유 ID 부여해서 정렬 후에도 참조 안 꼬이게
+  BIZ_SCHEDULE.push({_id: Date.now() + Math.random(), label:'', start:'', end:''});
+  renderBizSchedule();
+};
+
+// ID 기반 필드 업데이트
+window.updBizSch = (id, field, val) => {
+  const item = BIZ_SCHEDULE.find(s => s._id == id);
+  if (!item) return;
+  if (val === null) delete item[field];
+  else item[field] = val;
+  if (field === 'teams') renderBizSchedule();
+};
+window.delBizSch = (id) => {
+  const idx = BIZ_SCHEDULE.findIndex(s => s._id == id);
+  if (idx >= 0) { BIZ_SCHEDULE.splice(idx, 1); renderBizSchedule(); }
+};
+
+// 영업일별 팀 구성 편집 모달 - 전역 상태로 관리 (onclick에서 클로저 접근 불가 문제 해결)
+let _modalTeams = [];
+let _modalSchedId = null;
+
+window._mTeamName = (ti, val) => { if(_modalTeams[ti]) _modalTeams[ti].name = val; };
+window._mTeamColor = (ti, val, el) => {
+  if(_modalTeams[ti]) { _modalTeams[ti].color = val; el.closest('.m-team-hdr').style.background = val; }
+};
+window._mTeamDel = (ti) => { _modalTeams.splice(ti,1); _renderBizTeamModal(); };
+window._mTeamAdd = () => {
+  const colors = ['#2563EB','#16A34A','#7C3AED','#EA580C','#0891B2','#DB2777'];
+  _modalTeams.push({name:_modalTeams.length+1+'팀', color:colors[_modalTeams.length%colors.length], members:[]});
+  _renderBizTeamModal();
+};
+window._mMemberName = (ti, mi, val) => { if(_modalTeams[ti]?.members) _modalTeams[ti].members[mi] = val; };
+window._mMemberDel = (ti, mi) => { _modalTeams[ti].members.splice(mi,1); _renderBizTeamModal(); };
+window._mMemberAdd = (ti) => { _modalTeams[ti].members.push(''); _renderBizTeamModal(); };
+window._mSave = async () => {
+  const cleaned = _modalTeams
+    .map(t => ({...t, members:(t.members||[]).filter(m=>m.trim())}))
+    .filter(t => t.name.trim());
+
+  // BIZ_SCHEDULE 메모리 업데이트
+  updBizSch(_modalSchedId, 'teams', cleaned);
+
+  // CFG.bizSchedule 즉시 동기화 후 Firebase 저장
+  const sorted = [...BIZ_SCHEDULE]
+    .sort((a,b) => a.start.localeCompare(b.start))
+    .map(({_id, ...rest}) => rest);
+  CFG.bizSchedule = sorted;
+
+  try {
+    await set(cfgRef, CFG);
+    document.getElementById('biz-team-modal')?.remove();
+    // 렌더 갱신
+    renderBizSchedule();
+    alert('팀 구성이 저장됐어요.\n현황판에 즉시 반영됩니다.');
+  } catch(err) {
+    alert('저장 실패: ' + err.message);
+  }
+};
+window._mClose = () => { document.getElementById('biz-team-modal')?.remove(); };
+
+function _renderBizTeamModal() {
+  const modal = document.getElementById('biz-team-modal');
+  if (!modal) return;
+  const item = BIZ_SCHEDULE.find(s => s._id == _modalSchedId) || {};
+  const teamColors = ['#2563EB','#16A34A','#7C3AED','#EA580C','#0891B2','#DB2777'];
+  modal.querySelector('.m-body').innerHTML = `
+    <div style="font-size:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 14px;margin-bottom:14px;color:var(--text2)">
+      현재 기본 팀 구성을 바탕으로 편집하세요. 저장하면 이 영업일이 [현재]가 될 때 자동 적용됩니다.
+    </div>
+    ${_modalTeams.map((t, ti) => `
+      <div style="border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden">
+        <div class="m-team-hdr" style="background:${t.color};padding:8px 12px;display:flex;align-items:center;gap:8px">
+          <input value="${t.name.replace(/"/g,'&quot;')}" placeholder="팀 이름"
+            oninput="_mTeamName(${ti},this.value)"
+            style="flex:1;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:5px;padding:3px 8px;color:#fff;font-weight:700;font-size:13px;font-family:inherit">
+          <input type="color" value="${t.color}"
+            oninput="_mTeamColor(${ti},this.value,this)"
+            style="width:28px;height:28px;border:none;border-radius:4px;cursor:pointer;padding:0">
+          <button onclick="_mTeamDel(${ti})"
+            style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:5px;color:#fff;padding:2px 8px;cursor:pointer;font-size:12px">삭제</button>
+        </div>
+        <div style="padding:8px 12px">
+          ${(t.members||[]).map((m, mi) => `
+            <div style="display:flex;gap:6px;margin-bottom:4px;align-items:center">
+              <input value="${m.replace(/"/g,'&quot;')}" placeholder="직원 이름"
+                oninput="_mMemberName(${ti},${mi},this.value)"
+                style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:inherit">
+              <button onclick="_mMemberDel(${ti},${mi})"
+                style="background:#FEE2E2;color:#DC2626;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;font-size:11px">✕</button>
+            </div>`).join('')}
+          <button onclick="_mMemberAdd(${ti})"
+            style="width:100%;padding:5px;border:1px dashed var(--border);border-radius:5px;background:none;color:var(--text3);font-size:11px;cursor:pointer;margin-top:2px">+ 직원 추가</button>
+        </div>
+      </div>`).join('')}
+    <button onclick="_mTeamAdd()"
+      style="width:100%;padding:8px;border:1px dashed var(--border);border-radius:8px;background:none;color:var(--text2);font-size:12px;cursor:pointer;margin-bottom:14px">+ 팀 추가</button>
+    <div style="display:flex;gap:8px">
+      <button onclick="_mClose()" class="btn btn-outline" style="flex:1">취소</button>
+      <button onclick="_mSave()" class="btn btn-primary" style="flex:2">이 영업일 팀 구성 저장</button>
+    </div>`;
+}
+
+window.openBizSchTeam = (id) => {
+  const item = BIZ_SCHEDULE.find(s => s._id == id);
+  if (!item) return;
+  _modalSchedId = id;
+  _modalTeams = (item.teams && item.teams.length)
+    ? JSON.parse(JSON.stringify(item.teams))
+    : JSON.parse(JSON.stringify(CFG.teams || []));
+
+  const old = document.getElementById('biz-team-modal');
+  if (old) old.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'biz-team-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:14px;width:540px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.2)">
+      <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div>
+          <div style="font-size:15px;font-weight:900">${item.label || item.start} 팀 구성 설정</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${item.start} ~ ${item.end} 영업일에 적용될 팀/직원 구성</div>
+        </div>
+        <button onclick="_mClose()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
+      </div>
+      <div class="m-body" style="padding:16px 20px;overflow-y:auto"></div>
+    </div>`;
+  document.body.appendChild(modal);
+  _renderBizTeamModal();
+};
+
+window.saveBizSchedule = async () => {
+  if (!BIZ_SCHEDULE.length) { alert('영업일 일정을 먼저 추가해주세요'); return; }
+  const invalid = BIZ_SCHEDULE.find(s => !s.start || !s.end);
+  if (invalid) { alert('모든 영업일의 시작일/종료일을 입력해주세요'); return; }
+  // 저장용 사본 정렬, _id 필드 제거
+  const sorted = [...BIZ_SCHEDULE]
+    .sort((a,b) => a.start.localeCompare(b.start))
+    .map(({_id, ...rest}) => rest);
+  CFG.bizSchedule = sorted;
+  const today = new Date().toISOString().slice(0,10);
+  const cur = sorted.find(s => today >= s.start && today <= s.end);
+  if (cur) {
+    CFG.bizStart = cur.start;
+    CFG.bizEnd = cur.end;
+    document.getElementById('cfg-bizStart').value = cur.start;
+    document.getElementById('cfg-bizEnd').value = cur.end;
+  }
+  try {
+    await set(cfgRef, CFG);
+    const b = document.getElementById('saved-badge');
+    b.classList.add('show');
+    setTimeout(() => b.classList.remove('show'), 2500);
+    alert('영업일 일정 ' + sorted.length + '개 저장 완료!' + (cur ? ('\n\n현재 영업일: ' + cur.label + ' (' + cur.start + ' ~ ' + cur.end + ')') : ''));
+  } catch(err) {
+    alert('저장 실패: ' + err.message);
+  }
+};
+
+async function loadBizArchiveList() {
+  const { ref: dbRef, get } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+  const snap = await get(dbRef(db, 'archive/biz'));
+  const data = snap.val() || {};
+  const keys = Object.keys(data).sort().reverse();
+  const el = document.getElementById('biz-archive-list');
+  if (!keys.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">저장된 영업 아카이브</div>' +
+    keys.map(k => {
+      const d = data[k];
+      const label = d.label || k.replace(/_/g,'-').replace('~',' ~ ');
+      const at = d.archivedAt ? new Date(d.archivedAt).toLocaleString('ko-KR') : '';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;margin-bottom:6px;font-size:12px">
+        <div><div style="font-weight:700">💼 ${label}</div><div style="color:var(--text3);margin-top:2px">${at}</div></div>
+        <button class="btn btn-red btn-sm" onclick="delBizArchive('${k}')">삭제</button>
+      </div>`;
+    }).join('');
+}
+
+window.delSalesArchive = async (key) => {
+  if (!confirm('삭제할까요?')) return;
+  const { ref: dbRef, remove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+  await remove(dbRef(db, 'archive/sales/' + key));
+  loadSalesArchiveList();
+};
+window.delBizArchive = async (key) => {
+  if (!confirm('삭제할까요?')) return;
+  const { ref: dbRef, remove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+  await remove(dbRef(db, 'archive/biz/' + key));
+  loadBizArchiveList();
+};
+
+window.delArchive = async (month) => {
+  if (!confirm(`${month} 아카이브를 삭제할까요?`)) return;
+  const { ref: dbRef, remove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+  await remove(dbRef(db, `archive/${month}`));
+  loadArchiveList();
+};
+
+window.saveAll = () => {
+  try {
+    // 기본 설정값 수집
+    const totalGoalEl = document.getElementById('cfg-totalGoal');
+    const monthLabelEl = document.getElementById('cfg-monthLabel');
+    const bizStartEl = document.getElementById('cfg-bizStart');
+    const bizEndEl = document.getElementById('cfg-bizEnd');
+
+    if (totalGoalEl) CFG.totalGoal = N(totalGoalEl.value);
+    if (monthLabelEl) CFG.monthLabel = monthLabelEl.value;
+    if (bizStartEl) CFG.bizStart = bizStartEl.value;
+    if (bizEndEl) CFG.bizEnd = bizEndEl.value;
+
+    // 빈 직원명 제거
+    (CFG.teams||[]).forEach(function(t) {
+      t.members = t.members.filter(function(m){ return m.trim(); });
+    });
+
+    // BIZ_SCHEDULE → CFG 동기화 (_id 제거)
+    CFG.bizSchedule = BIZ_SCHEDULE.map(function(s) {
+      const obj = {};
+      Object.keys(s).forEach(function(k){ if(k !== '_id') obj[k] = s[k]; });
+      return obj;
+    }).sort(function(a,b){ return (a.start||'').localeCompare(b.start||''); });
+
+    // 팀별 목표 합산 → 전체 total
+    (CFG.weeks||[]).forEach(function(w) {
+      const goals = w.teamGoals || {};
+      const sum = Object.values(goals).reduce(function(s,v){ return s+N(v); }, 0);
+      if (sum > 0) w.total = sum;
+    });
+
+    // memberRoles 빈 키/빈 값 제거 (Firebase는 빈 문자열 키 허용 안 함)
+    if (CFG.memberRoles) {
+      Object.keys(CFG.memberRoles).forEach(function(k) {
+        if (!k || !k.trim() || !CFG.memberRoles[k] || !CFG.memberRoles[k].trim()) {
+          delete CFG.memberRoles[k];
+        }
+      });
+    }
+
+    // 현황판 호환 필드
+    CFG.goals = { monthly: CFG.totalGoal, monthLabel: CFG.monthLabel };
+
+    set(cfgRef, CFG).then(function() {
+      const b = document.getElementById('saved-badge');
+      if (b) { b.classList.add('show'); setTimeout(function(){ b.classList.remove('show'); }, 2500); }
+      renderWeeks();
+    }).catch(function(err) {
+      alert('Firebase 저장 실패: ' + err.message);
+    });
+
+  } catch(e) {
+    alert('저장 중 오류: ' + e.message);
+  }
+};
+</script>
+</body>
+</html>
