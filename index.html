@@ -940,7 +940,7 @@ function renderArchiveView(arcKey) {
       teams.forEach(t => { unpaidByTeam[t.name]={}; (t.members||[]).forEach(m=>{unpaidByTeam[t.name][m]=[];}); });
       Object.entries(consultData).forEach(([date,rows]) => {
         Object.entries(rows||{}).forEach(([rid,r]) => {
-          if (r.result==='미납') {
+          if (r.result==='미납' || r.result==='COD') {
             const tm=teams.find(t=>(t.members||[]).includes(r.mentor));
             if (tm&&r.mentor) {
               if (!unpaidByTeam[tm.name][r.mentor]) unpaidByTeam[tm.name][r.mentor]=[];
@@ -972,7 +972,7 @@ function renderArchiveView(arcKey) {
               <td>${r.student||'-'}</td><td>${r.subject||'-'}</td>
               <td style="font-family:'Roboto',monospace;font-size:11px">${fmtDate(date)}</td>
               <td style="text-align:right;color:var(--gold);font-weight:700">${r.expected?F2(Number(r.expected)):'-'}</td>
-              <td style="color:var(--text2);font-size:11px;line-height:1.5">${r.note||''}</td>
+              <td style="color:var(--text2);font-size:11px;line-height:1.5">${r.result==='COD'?'<span style="display:inline-block;background:#EFF4FF;color:#2563EB;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;margin-right:5px">COD</span>':''}${r.note||''}</td>
             </tr>`;
           });
         });
@@ -1552,7 +1552,7 @@ function renderUnpaidList() {
   Object.entries(consultSrc).forEach(([date, rows]) => {
     if (date < BIZ_PERIOD.s || date > BIZ_PERIOD.e) return;
     Object.entries(rows||{}).forEach(([rid, r]) => {
-      if (r.result === '미납') {
+      if (r.result === '미납' || r.result === 'COD') {
         const t = getTeam(r.mentor);
         if (t && unpaidByTeam[t.name] && r.mentor) {
           if (!unpaidByTeam[t.name][r.mentor]) unpaidByTeam[t.name][r.mentor] = [];
@@ -1563,7 +1563,7 @@ function renderUnpaidList() {
   });
 
   let h = `<div class="addlist-wrap">
-    <div class="stitle" style="margin-bottom:10px">💰 미납 리스트 <span style="font-size:11px;font-weight:400;color:var(--text3)">(상담내역 결과 '미납' 자동집계)</span></div>`;
+    <div class="stitle" style="margin-bottom:10px">💰 미납 리스트 <span style="font-size:11px;font-weight:400;color:var(--text3)">(상담내역 결과 '미납'·'COD' 자동집계)</span></div>`;
 
   const fmtDate = d => {
     const dt = new Date(d);
@@ -1601,7 +1601,7 @@ function renderUnpaidList() {
           <td>${r.subject||'-'}</td>
           <td style="font-family:'Roboto',monospace;font-size:11px">${fmtDate(date)}</td>
           <td style="text-align:right;font-family:'Roboto',monospace;color:var(--gold);font-weight:700">${r.expected?F(N(r.expected)):'-'}</td>
-          <td style="color:var(--text2);font-size:11px;line-height:1.5;word-break:keep-all;overflow-wrap:break-word">${r.note||''}</td>
+          <td style="color:var(--text2);font-size:11px;line-height:1.5;word-break:keep-all;overflow-wrap:break-word">${r.result==='COD'?'<span style="display:inline-block;background:#EFF4FF;color:#2563EB;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;margin-right:5px">COD</span>':''}${r.note||''}</td>
           <td>
             <input class="unpaid-fb-inp" value="${fb.replace(/"/g,'&quot;')}" placeholder="피드백 입력..."
               data-key="${fbKey}"
@@ -1776,9 +1776,11 @@ function calcMS() {
   }));
   // 예정 영업월이면 상담 데이터도 제로
   if (window._bizIsFuture) return ms;
-  // BIZ_PERIOD 범위 안의 날짜만 집계
+  // BIZ_PERIOD 범위 안 + 오늘까지만 집계 (미래 예약 상담은 영업 데이터에서 제외)
+  const _today = todayStr();
+  const _capDate = _today < BIZ_PERIOD.e ? _today : BIZ_PERIOD.e;
   Object.entries(CONSULT).forEach(([date, day]) => {
-    if (date < BIZ_PERIOD.s || date > BIZ_PERIOD.e) return;
+    if (date < BIZ_PERIOD.s || date > _capDate) return;
     Object.values(day||{}).forEach(r => {
       const m = r.mentor; if (!ms[m]) return;
       if (r.status === '상담') ms[m].상담++;
@@ -1786,7 +1788,7 @@ function calcMS() {
       if (r.result === '미납') { ms[m].미납 += N(r.expected); ms[m].미등록++; }
       if (r.result === '미등록회수') { ms[m].완납 += N(r.paid); ms[m].등록++; }
       if (r.result === '취소') ms[m].취소++;
-      if (r.result === 'COD') { ms[m].완납 += N(r.paid); ms[m].등록++; ms[m].COD++; }
+      if (r.result === 'COD') { ms[m].완납 += N(r.paid); ms[m].미납 += N(r.expected); ms[m].등록++; ms[m].COD++; }
     });
   });
   return ms;
@@ -2880,7 +2882,7 @@ window.showBlog = function showBlog() {
 
     let h = `<div style="padding:16px 20px">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
-        <div style="font-size:18px;font-weight:900">블로그 업무량</div>
+        <div style="font-size:18px;font-weight:900">업무량 (블로그 · 통화시간)</div>
 
       </div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
@@ -3026,10 +3028,32 @@ window.showBlog = function showBlog() {
               </div>`;
             }).join('');
 
+            const memoD = BLOG.__memo?.[wKey]?.[m]?.[d.ds] || '';
+            const callD = BLOG.__call?.[wKey]?.[m]?.[d.ds] || {};
             return `<td style="padding:4px 6px;border:1px solid var(--border);vertical-align:top;background:${tdBg}">
+              <input value="${(memoD+'').replace(/"/g,'&quot;')}" placeholder="제목 (예: 세종웹툰학원)"
+                onchange="W._blogMemo('${wKey}','${m}','${d.ds}',this.value)"
+                style="width:100%;font-size:10px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:#fff;margin-bottom:3px">
               ${urlRows}
               <button onclick="W._blogUrlAdd('${wKey}','${m}','${d.ds}')"
                 style="width:100%;margin-top:2px;padding:2px;font-size:10px;color:var(--text3);background:transparent;border:1px dashed var(--border);border-radius:4px;cursor:pointer">+ 추가</button>
+              <div style="margin-top:5px;padding-top:5px;border-top:1px dashed var(--border);font-size:10px;color:var(--text3)">
+                <div style="font-weight:700;color:var(--text2);margin-bottom:2px">📞 통시(통화시간)</div>
+                <div style="display:flex;align-items:center;gap:3px;margin-bottom:2px">
+                  <span style="width:24px;flex-shrink:0">내선</span>
+                  <input type="number" min="0" value="${callD.ext??''}" placeholder="0"
+                    onchange="W._blogCall('${wKey}','${m}','${d.ds}','ext',this.value)"
+                    style="width:44px;font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:right;background:#fff">
+                  <span>분</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:3px">
+                  <span style="width:24px;flex-shrink:0">개인</span>
+                  <input type="number" min="0" value="${callD.personal??''}" placeholder="0"
+                    onchange="W._blogCall('${wKey}','${m}','${d.ds}','personal',this.value)"
+                    style="width:44px;font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;text-align:right;background:#fff">
+                  <span>분</span>
+                </div>
+              </div>
             </td>`;
           }).join('')}
           <td data-achieve="1" data-req="${reqCount||''}" style="padding:6px;border:1px solid var(--border);text-align:center;font-weight:700;
@@ -3049,7 +3073,7 @@ window.showBlog = function showBlog() {
     });
 
     h += `<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0">
-      URL이 http/https로 시작해야 인정됩니다 · 입력 시각 자동 기록
+      URL이 http/https로 시작해야 인정됩니다 · 제목 · 통시(내선/개인 통화시간)는 입력 즉시 자동 저장 · 퇴근 전 각자 입력
     </div></div>`;
 
     sc.innerHTML = h;
@@ -4304,6 +4328,24 @@ W._blogRole = (member, role) => {
   BLOG.__roles[member] = role;
   set(rBlog, BLOG);
   showBlog();
+};
+// 통시(통화시간) 저장 — BLOG.__call[주][직원][날짜] = {ext, personal}
+W._blogCall = (wKey, member, dateStr, field, val) => {
+  if (!BLOG.__call) BLOG.__call = {};
+  if (!BLOG.__call[wKey]) BLOG.__call[wKey] = {};
+  if (!BLOG.__call[wKey][member]) BLOG.__call[wKey][member] = {};
+  const cur = BLOG.__call[wKey][member][dateStr] || {};
+  cur[field] = (val === '' ? '' : Math.max(0, parseInt(val, 10) || 0));
+  BLOG.__call[wKey][member][dateStr] = cur;
+  set(rBlog, BLOG);
+};
+// 블로그 제목/메모 저장 — BLOG.__memo[주][직원][날짜] = 텍스트
+W._blogMemo = (wKey, member, dateStr, val) => {
+  if (!BLOG.__memo) BLOG.__memo = {};
+  if (!BLOG.__memo[wKey]) BLOG.__memo[wKey] = {};
+  if (!BLOG.__memo[wKey][member]) BLOG.__memo[wKey][member] = {};
+  BLOG.__memo[wKey][member][dateStr] = val;
+  set(rBlog, BLOG);
 };
 
 window.W = W;
